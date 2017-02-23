@@ -4,3 +4,5 @@ c:\users\home\documents\visual studio 2015\Projects\qv-solutions-helper\qv-solut
 c:\users\home\documents\visual studio 2015\Projects\qv-solutions-helper\qv-solutions-helper\obj\Debug\qv-solutions-helper.csprojResolveAssemblyReference.cache
 c:\users\home\documents\visual studio 2015\Projects\qv-solutions-helper\qv-solutions-helper\obj\Debug\qv-solutions-helper.exe
 c:\users\home\documents\visual studio 2015\Projects\qv-solutions-helper\qv-solutions-helper\obj\Debug\qv-solutions-helper.pdb
+c:\users\home\documents\visual studio 2015\Projects\qv-solutions-helper\qv-solutions-helper\obj\Debug\qv_solutions_helper.Resource1.resources
+c:\users\home\documents\visual studio 2015\Projects\qv-solutions-helper\qv-solutions-helper\obj\Debug\qv-solutions-helper.csproj.GenerateResource.Cache

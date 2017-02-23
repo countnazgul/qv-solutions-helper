@@ -3,11 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
-//using QlikOCXLib;
-//using QlikView;
-//using QVPLib;
-
+ 
 using System.IO;
 
 namespace qv_solutions_helper
@@ -16,16 +12,6 @@ namespace qv_solutions_helper
     {
         static void Main(string[] args)
         {
-
-            //string documentPath = @"C:\Users\adm-s7729841\Desktop\test.qvw";
-
-            //QlikOCXLib.QlikOCX o = new QlikOCXLib.QlikOCX();
-            //QlikView.Doc doc = o.OpenDocument(documentPath);
-            //string script = doc.GetProperties().Script;
-
-            //Console.WriteLine(System.IO.Directory.GetCurrentDirectory().ToString());
-            //Console.Write(newPath);
-            //Console.ReadLine();
             Console.ForegroundColor = ConsoleColor.White;
             MainMenu("", true);
 
@@ -35,8 +21,7 @@ namespace qv_solutions_helper
         static public void MainMenu(string additionalMessage, bool clear)
         {
             Console.Clear();
-            string welcome = Environment.NewLine + "(press '0' to exit in any menu)" + Environment.NewLine + "" + Environment.NewLine;
-
+            string welcome = Environment.NewLine + "(enter 0 to exit in any menu)" + Environment.NewLine + "" + Environment.NewLine;
 
             if (additionalMessage != "")
             {
@@ -51,11 +36,14 @@ namespace qv_solutions_helper
                                                                                  "2. Build ...",
                                                                                  "3. Remove .." }, clear);
 
+
             switch (options)
             {
                 case 1:
                     options = PrintOptions("* Create *", new string[] { "1. Project to the solution",
                                                                         "2. New step to project" }, clear);
+
+
                     switch (options)
                     {
                         case 1: // new project
@@ -72,7 +60,7 @@ namespace qv_solutions_helper
 
                                 if (response == "y")
                                 {
-                                    CreatePrjFolders(newPath, prjName);
+                                    CreatePrjFolders(newPath, prjName, false);
                                     MainMenu("Project folders are created", false);
                                 }
                                 else
@@ -82,8 +70,8 @@ namespace qv_solutions_helper
                             }
                             else
                             {
-                                CreatePrjFolders(newPath, prjName);
-                                //MainMenu("Project folders are created", false);
+                                CreatePrjFolders(newPath, prjName, false);
+                                MainMenu("Project folders are created", false);
                             }
 
 
@@ -97,36 +85,38 @@ namespace qv_solutions_helper
                             Console.WriteLine("* Create new step *");
                             Console.WriteLine();
 
-                            //if( availableProjects.Length > 0) { 
-
-                            for(var i = 0; i < availableProjects.Length; i++)
+                            for (var i = 0; i < availableProjects.Length; i++)
                             {
-                                Console.WriteLine( (i + 1) + ". " + new DirectoryInfo(availableProjects[i]).Name);
+                                Console.WriteLine((i + 1) + ". " + new DirectoryInfo(availableProjects[i]).Name);
                             }
 
                             Console.WriteLine();
                             Console.Write("In which project? ");
                             string selectedProject = Console.ReadLine();
-                            selectedProject = availableProjects[ Convert.ToInt32(selectedProject) - 1];
+                            selectedProject = availableProjects[Convert.ToInt32(selectedProject) - 1];
 
                             Console.Write("What is the step name? ");
                             string stepName = Console.ReadLine();
 
                             string[] availablerSteps = Directory.GetDirectories(selectedProject);
                             int stepId = -1;
+                            string newStepId = "0";
 
-                            if(availablerSteps.Length == 0)
+                            if (availablerSteps.Length == 0)
                             {
                                 stepId = 1;
-                                string newStepId = stepId.ToString("D2");
-                                Directory.CreateDirectory(selectedProject + "\\" + newStepId + "" + stepName);
-                            } else
+                                newStepId = stepId.ToString("D2");
+                                CreatePrjFolders(selectedProject, newStepId + "" + stepName, true);
+                            }
+                            else
                             {
                                 string lastStepFolder = new DirectoryInfo(availablerSteps[availablerSteps.Length - 1]).Name;
                                 stepId = int.Parse(lastStepFolder.Substring(0, 2)) + 1;
-                                string newStepId = stepId.ToString("D2");
-                                Directory.CreateDirectory(selectedProject + "\\" + newStepId + "" + stepName);
+                                newStepId = stepId.ToString("D2");
+                                CreatePrjFolders(selectedProject, newStepId + "" + stepName, true);
                             }
+
+                            CreateQVW(selectedProject, newStepId + "" + stepName);
 
                             MainMenu("New step was created", false);
 
@@ -138,25 +128,47 @@ namespace qv_solutions_helper
                     break;
                 case 3:
                     options = PrintOptions("* Remove *", new string[] { "1. Project",
-                                                                       "2. Empty all QVW (open without data and save" }, true);
-                    switch(options)
+                                                                        "2. Step from project",
+                                                                        "2. Empty all QVW (open without data and save" }, true);
+                    switch (options)
                     {
                         case 1:
-                            
+
                             break;
                     }
                     break;
+                default:
+                    Console.WriteLine("test");
+                    throw new ArgumentOutOfRangeException("Unknown value");
             }
         }
 
-        static public void CreatePrjFolders(string newPath, string prjName)
+        static public void CreatePrjFolders(string newPath, string prjName, bool isStep)
         {
             string[] folders = new string[] { "data", "qvw", "scripts" };
 
             for (var i = 0; i < folders.Length; i++)
             {
-                Directory.CreateDirectory(newPath + "\\" + folders[i] + "\\" + prjName);
+                if (isStep == false)
+                {
+                    Directory.CreateDirectory(newPath + "\\" + folders[i] + "\\" + prjName);
+                }
+                else
+                {
+                    if (folders[i] != "qvw")
+                    {
+                        string path = newPath.Replace("scripts", folders[i]) + "\\" + prjName;
+                        Directory.CreateDirectory(path);
+                    }
+                }
             }
+        }
+
+        static public void CreateQVW(string path, string stepName)
+        {
+            string newPath = path.Replace("scripts", "qvw") + "\\" + stepName;
+            File.WriteAllBytes(newPath + ".qvw", Resource1._3Level);
+            File.WriteAllText(path + "\\" + stepName + "\\" + "01Main.qvs", "//Hello QlikView!");
         }
 
         static public int PrintOptions(string header, string[] options, bool clear)
@@ -173,13 +185,27 @@ namespace qv_solutions_helper
                 Console.WriteLine(options[i]);
             }
 
-            int a = int.Parse(Console.ReadLine());
+            int a = -1;
 
-
-            if (a == 0)
+            try
             {
-                Console.Clear();
-                Environment.Exit(0);
+                a = int.Parse(Console.ReadLine());
+
+                if(a > options.Length + 1)
+                {
+                    MainMenu("Unknown value", true);
+                } else if (a == 0)
+                {
+                    Console.Clear();
+                    Environment.Exit(0);
+                } else if(a < 0)
+                {
+                    MainMenu("Unknown value", true);
+                }
+
+            } catch(Exception ex)
+            {
+                MainMenu("Unknown value", true);
             }
 
             return a;
