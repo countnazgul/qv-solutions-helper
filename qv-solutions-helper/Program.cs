@@ -21,7 +21,7 @@ namespace qv_solutions_helper
         static public void MainMenu(string additionalMessage, bool clear)
         {
             Console.Clear();
-            string welcome = Environment.NewLine + "(enter 0 to exit in any menu)" + Environment.NewLine + "" + Environment.NewLine;
+            string welcome = Environment.NewLine + "Enter the needed number or enter 0 to exit in any menu" + Environment.NewLine + "" + Environment.NewLine;
 
             if (additionalMessage != "")
             {
@@ -101,6 +101,7 @@ namespace qv_solutions_helper
                             string[] availablerSteps = Directory.GetDirectories(selectedProject);
                             int stepId = -1;
                             string newStepId = "0";
+                            string lastStepFolder = "";
 
                             if (availablerSteps.Length == 0)
                             {
@@ -110,13 +111,13 @@ namespace qv_solutions_helper
                             }
                             else
                             {
-                                string lastStepFolder = new DirectoryInfo(availablerSteps[availablerSteps.Length - 1]).Name;
+                                lastStepFolder = new DirectoryInfo(availablerSteps[availablerSteps.Length - 1]).Name;
                                 stepId = int.Parse(lastStepFolder.Substring(0, 2)) + 1;
                                 newStepId = stepId.ToString("D2");
                                 CreatePrjFolders(selectedProject, newStepId + "" + stepName, true);
                             }
 
-                            CreateQVW(selectedProject, newStepId + "" + stepName);
+                            CreateQVW(selectedProject, newStepId + "" + stepName, lastStepFolder);
 
                             MainMenu("New step was created", false);
 
@@ -129,11 +130,42 @@ namespace qv_solutions_helper
                 case 3:
                     options = PrintOptions("* Remove *", new string[] { "1. Project",
                                                                         "2. Step from project",
-                                                                        "2. Empty all QVW (open without data and save" }, true);
+                                                                        "3. Empty all QVW (open without data and save" }, true);
                     switch (options)
                     {
                         case 1:
+                            string solutionPath = System.IO.Directory.GetCurrentDirectory().ToString();
+                            solutionPath = Path.GetFullPath(Path.Combine(solutionPath, @".\src\scripts"));
+                            string[] availableProjects = Directory.GetDirectories(solutionPath);
 
+                            Console.Clear();
+                            Console.WriteLine("* Remove project *");
+                            Console.WriteLine();
+
+                            for (var i = 0; i < availableProjects.Length; i++)
+                            { 
+                                Console.WriteLine((i + 1) + ". " + new DirectoryInfo(availableProjects[i]).Name);
+                            }
+
+                            Console.WriteLine();
+                            Console.Write("Which project? ");
+                            string selectedProject = Console.ReadLine();
+                            selectedProject = availableProjects[Convert.ToInt32(selectedProject) - 1];
+
+                            Console.Write("Are you shure? This will remove all qvw, data and scripts files! (y/n) ");
+                            string deleteProjectResponse = Console.ReadLine();
+
+                            if(deleteProjectResponse.ToLower() == "y")
+                            {
+                                RemoveProject(selectedProject);
+                                MainMenu("Project deleted!", false);
+                            } else
+                            {
+                                MainMenu("", true);
+                            }
+
+                            break;
+                        case 2:
                             break;
                     }
                     break;
@@ -164,13 +196,20 @@ namespace qv_solutions_helper
             }
         }
 
-        static public void CreateQVW(string path, string stepName)
+        static public void CreateQVW(string path, string stepName, string lastStepFolder)
         {
             string newPath = path.Replace("scripts", "qvw") + "\\" + stepName;
-            File.WriteAllBytes(newPath + ".qvw", Resource1._3Level);
-            File.WriteAllText(path + "\\" + stepName + "\\" + "01Main.qvs", "//Hello QlikView!");
-        }
+            string binaryLoad = "";
+            if(lastStepFolder != "")
+            {
+                binaryLoad = "Binary [" + lastStepFolder + ".qvw];" + System.Environment.NewLine;
+            }
 
+
+            File.WriteAllBytes(newPath + ".qvw", Resource1._3Level);
+            File.WriteAllText(path + "\\" + stepName + "\\" + "01Main.qvs", binaryLoad  + "//Hello QlikView!" + System.Environment.NewLine);
+        }
+         
         static public int PrintOptions(string header, string[] options, bool clear)
         {
             if (clear == true)
@@ -209,6 +248,23 @@ namespace qv_solutions_helper
             }
 
             return a;
+        }
+
+        static public void RemoveProject(string prjFolder)
+        {
+            string[] folders = new string[] { "data", "qvw", "scripts" };
+
+            for (var i = 0; i < folders.Length; i++)
+            {
+                string folder = prjFolder.Replace("\\scripts\\", "\\" + folders[i] + "\\");
+                try
+                {
+                    Directory.Delete(folder, true);
+                } catch(Exception ex)
+                {
+
+                }
+            }
         }
     }
 }
