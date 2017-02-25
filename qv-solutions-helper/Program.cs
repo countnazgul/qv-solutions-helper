@@ -152,7 +152,7 @@ namespace qv_solutions_helper
                             string selectedProject = Console.ReadLine();
                             selectedProject = availableProjects[Convert.ToInt32(selectedProject) - 1];
 
-                            Console.Write("Are you shure? This will remove all qvw, data and scripts files! (y/n) ");
+                            Console.Write("Are you shure? This will remove all qvw, data and script files! (y/n) ");
                             string deleteProjectResponse = Console.ReadLine();
 
                             if(deleteProjectResponse.ToLower() == "y")
@@ -166,11 +166,45 @@ namespace qv_solutions_helper
 
                             break;
                         case 2:
+                            Console.Clear();
+                            Console.WriteLine("* Remove step project *");
+                            Console.WriteLine();
+                            string[] projects = GetProjects();
+
+                            for (var i = 0; i < projects.Length; i++)
+                            {
+                                Console.WriteLine((i + 1) + ". " + new DirectoryInfo(projects[i]).Name);
+                            }
+                            
+
+                            Console.WriteLine();
+                            Console.Write("Which project? ");
+                            string project = Console.ReadLine();
+                            selectedProject = projects[Convert.ToInt32(project) - 1];
+
+                            Console.Clear();
+                            Console.WriteLine("* Which step? *");
+                            Console.WriteLine();
+
+                            string[] availableSteps = Directory.GetDirectories(selectedProject);
+
+                            for (var i = 0; i < availableSteps.Length; i++)
+                            {
+                                Console.WriteLine((i + 1) + ". " + new DirectoryInfo(availableSteps[i]).Name);
+                            }
+
+                            string step = Console.ReadLine();
+                            string selectedStep = availableSteps[Convert.ToInt32(step) - 1];
+
+                            RemoveStep(selectedStep);
+
+                            break;
+                        case 3:
+                            MainMenu("Not implemented yet", false);
                             break;
                     }
                     break;
                 default:
-                    Console.WriteLine("test");
                     throw new ArgumentOutOfRangeException("Unknown value");
             }
         }
@@ -265,6 +299,34 @@ namespace qv_solutions_helper
 
                 }
             }
+        }
+
+        static public void RemoveStep(string step)
+        {
+            Console.Write("Are you shure? This will remove the qvw, data and script files! (y/n) ");
+            string deleteSteptResponse = Console.ReadLine();
+
+            if (deleteSteptResponse.ToLower() == "y")
+            {
+                Directory.Delete(step, true);
+                Directory.Delete(step.Replace("\\scripts\\", "\\data\\"), true);
+                File.Delete(step.Replace("\\scripts\\", "\\qvw\\") + ".qvw");
+
+                MainMenu("Step deleted", false);
+            }
+            else
+            {
+                MainMenu("", true);
+            }            
+        }
+
+        static public string[] GetProjects()
+        {
+            string solutionPath = System.IO.Directory.GetCurrentDirectory().ToString();
+            solutionPath = Path.GetFullPath(Path.Combine(solutionPath, @".\src\scripts"));
+            string[] availableProjects = Directory.GetDirectories(solutionPath);
+
+            return availableProjects;
         }
     }
 }
