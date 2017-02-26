@@ -20,6 +20,7 @@ namespace qv_solutions_helper
 
         static public void MainMenu(string additionalMessage, bool clear)
         {
+            
             Console.Clear();
             string welcome = Environment.NewLine + "Enter the needed number or enter 0 to exit in any menu" + Environment.NewLine + "" + Environment.NewLine;
 
@@ -34,7 +35,8 @@ namespace qv_solutions_helper
 
             var options = PrintOptions(welcome + "* Main Menu *", new string[] { "1. Add new ...",
                                                                                  "2. Build ...",
-                                                                                 "3. Remove .." }, clear);
+                                                                                 "3. Remove ..",
+                                                                                 "4. Open step qvw"}, clear);
 
 
             switch (options)
@@ -203,6 +205,40 @@ namespace qv_solutions_helper
                             MainMenu("Not implemented yet", false);
                             break;
                     }
+                    break;
+                case 4:
+                    Console.Clear();
+                    Console.WriteLine("* Open step qvw *");
+                    Console.WriteLine();
+                    string[] avProjects = GetProjects();
+
+                    for (var i = 0; i < avProjects.Length; i++)
+                    {
+                        Console.WriteLine((i + 1) + ". " + new DirectoryInfo(avProjects[i]).Name);
+                    }
+
+
+                    Console.WriteLine();
+                    Console.Write("Which project? ");
+                    string projectqvw = Console.ReadLine();
+                    string selectedProj = avProjects[Convert.ToInt32(projectqvw) - 1];
+
+                    Console.Clear();
+                    Console.WriteLine("* Which step? *");
+                    Console.WriteLine();
+
+                    string[] availableStepsqvw = Directory.GetDirectories(selectedProj);
+
+                    for (var i = 0; i < availableStepsqvw.Length; i++)
+                    {
+                        Console.WriteLine((i + 1) + ". " + new DirectoryInfo(availableStepsqvw[i]).Name);
+                    }
+
+                    string stepqvw = Console.ReadLine();
+                    string selectedStepqvw = availableStepsqvw[Convert.ToInt32(stepqvw) - 1];
+                    selectedStepqvw = selectedStepqvw.Replace("\\scripts\\", "\\qvw\\") + ".qvw";
+                    System.Diagnostics.Process.Start(@"c:\Program Files\QlikView\Qv.exe", selectedStepqvw);
+                    MainMenu("", true);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException("Unknown value");
