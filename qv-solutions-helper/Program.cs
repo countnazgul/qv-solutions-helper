@@ -5,13 +5,23 @@ using System.Text;
 using System.Threading.Tasks;
  
 using System.IO;
+using YamlDotNet.Core;
+using YamlDotNet.Serialization;
 
 namespace qv_solutions_helper
 {
     class Program
     {
+        public static Object configFromFile;
         static void Main(string[] args)
         {
+            using (TextReader reader = File.OpenText(@"F:\Projects\Personal\QV_Project_New\_config\solution.config.yaml"))
+            {
+
+                Deserializer deserializer = new Deserializer();
+                configFromFile = deserializer.Deserialize(reader);
+            }
+
             Console.ForegroundColor = ConsoleColor.White;
             MainMenu("", true);
 
@@ -36,7 +46,8 @@ namespace qv_solutions_helper
             var options = PrintOptions(welcome + "* Main Menu *", new string[] { "1. Add new ...",
                                                                                  "2. Build ...",
                                                                                  "3. Remove ..",
-                                                                                 "4. Open step qvw"}, clear);
+                                                                                 "4. Open step qvw",
+                                                                                 "5. Test"}, clear);
 
 
             switch (options)
@@ -239,6 +250,11 @@ namespace qv_solutions_helper
                     selectedStepqvw = selectedStepqvw.Replace("\\scripts\\", "\\qvw\\") + ".qvw";
                     System.Diagnostics.Process.Start(@"c:\Program Files\QlikView\Qv.exe", selectedStepqvw);
                     MainMenu("", true);
+                    break;
+                case 5:
+
+
+
                     break;
                 default:
                     throw new ArgumentOutOfRangeException("Unknown value");
