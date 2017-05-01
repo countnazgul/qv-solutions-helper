@@ -3,36 +3,47 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
- 
+
 using System.IO;
 using YamlDotNet.Core;
+using YamlDotNet.Core.Events;
 using YamlDotNet.Serialization;
+using YamlDotNet.Serialization.NamingConventions;
+using YamlDotNet.Helpers;
+using YamlDotNet.RepresentationModel;
+using System.Diagnostics;
+using System.Net;
+//using YamlDotNet.Helpers; 
 
 namespace qv_solutions_helper
 {
     class Program
     {
-        public static Object configFromFile;
         static void Main(string[] args)
         {
-            using (TextReader reader = File.OpenText(@"F:\Projects\Personal\QV_Project_New\_config\solution.config.yaml"))
-            {
-
-                Deserializer deserializer = new Deserializer();
-                configFromFile = deserializer.Deserialize(reader);
-            }
-
             Console.ForegroundColor = ConsoleColor.White;
             MainMenu("", true);
-
         }
 
 
         static public void MainMenu(string additionalMessage, bool clear)
         {
-            
+
+            //WebRequest request = WebRequest.Create("https://api.twitter.com/1/users/profile_image?screen_name=twitterapi&size=bigger");
+            //WebResponse response = request.GetResponse();
+            //Console.WriteLine(response.ResponseUri);
+
+            System.Reflection.Assembly assembly = System.Reflection.Assembly.GetExecutingAssembly();
+            FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
+            string version = fvi.FileVersion;
+
+            string solutionPath = System.IO.Directory.GetCurrentDirectory().ToString();
+            solutionPath = Path.GetFullPath(Path.Combine(solutionPath, @".\src\scripts"));
+            string[] availableProjects = Directory.GetDirectories(solutionPath);
+            string selectedProject = "";
+
             Console.Clear();
-            string welcome = Environment.NewLine + "Enter the needed number or enter 0 to exit in any menu" + Environment.NewLine + "" + Environment.NewLine;
+            string welcome = "Wellcome to Qlik Solutions Helper (" + version + ")" + Environment.NewLine + "Enter the needed number or enter 0 to exit in any menu" + Environment.NewLine + "" + Environment.NewLine;
 
             if (additionalMessage != "")
             {
@@ -90,9 +101,9 @@ namespace qv_solutions_helper
 
                             break;
                         case 2: // new step
-                            string solutionPath = System.IO.Directory.GetCurrentDirectory().ToString();
-                            solutionPath = Path.GetFullPath(Path.Combine(solutionPath, @".\src\scripts"));
-                            string[] availableProjects = Directory.GetDirectories(solutionPath);
+                            //string solutionPath = System.IO.Directory.GetCurrentDirectory().ToString();
+                            //solutionPath = Path.GetFullPath(Path.Combine(solutionPath, @".\src\scripts"));
+                            //string[] availableProjects = Directory.GetDirectories(solutionPath);
 
                             Console.Clear();
                             Console.WriteLine("* Create new step *");
@@ -105,7 +116,7 @@ namespace qv_solutions_helper
 
                             Console.WriteLine();
                             Console.Write("In which project? ");
-                            string selectedProject = Console.ReadLine();
+                            selectedProject = Console.ReadLine();
                             selectedProject = availableProjects[Convert.ToInt32(selectedProject) - 1];
 
                             Console.Write("What is the step name? ");
@@ -139,6 +150,73 @@ namespace qv_solutions_helper
                     break;
                 case 2:
 
+                    Console.Clear();
+                    Console.WriteLine("* Remove project *");
+                    Console.WriteLine();
+
+                    for (var i = 0; i < availableProjects.Length; i++)
+                    {
+                        Console.WriteLine((i + 1) + ". " + new DirectoryInfo(availableProjects[i]).Name);
+                    }
+
+                    Console.WriteLine();
+                    Console.Write("Which project? ");
+                    selectedProject = Console.ReadLine();
+                    selectedProject = availableProjects[Convert.ToInt32(selectedProject) - 1];
+                    string[] projectFolders = Directory.GetDirectories(selectedProject);
+                    string projectScript = "";
+                    string projectName = Path.GetFileName(selectedProject);
+
+                    for (int i = 0; i < projectFolders.Length; i++)
+                    {                        
+                        string[] files = System.IO.Directory.GetFiles(projectFolders[i], "*.qvs");
+                        if (files.Length > 0)
+                        {
+                            for (int f = 0; f < files.Length; f++)
+                            {
+                                string fileName = Path.GetFileNameWithoutExtension(files[f]);
+                                projectScript += "///$tab " + fileName;
+
+                                using (StreamReader sr = File.OpenText(files[f]))                                
+                                {
+                                    string s = String.Empty;
+                                    while ((s = sr.ReadLine()) != null)
+                                    {
+                                        if (s.ToLower().IndexOf("binary") == -1)
+                                        {
+                                            projectScript += Environment.NewLine + s + Environment.NewLine;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    File.Copy( projectFolders[projectFolders.Length - 1].Replace(@"\scripts\", @"\qvw\") + ".qvw", @".\build\" + projectName + ".qvw", true);
+
+
+                    string tempScript = Guid.NewGuid().ToString();
+
+                    File.WriteAllText(@".\temp\" + tempScript, projectScript);
+
+                    //System.Diagnostics.Process.Start("cscript",  @".\bin\vbs\script_edit.vbs /tempfile:" + Path.GetFullPath(@".\temp\" + tempScript) + " /qvw:" + Path.GetFullPath(@".\build\" + projectName + ".qvw"));
+
+                    Console.WriteLine("Building ...");
+                    Console.WriteLine("(building time depends on the last step qvw open and save time)");
+
+                    Process scriptProc = new Process();
+                    scriptProc.StartInfo.FileName = @"cscript";
+                    scriptProc.StartInfo.WorkingDirectory = @".\bin\vbs\"; //<---very important 
+                    scriptProc.StartInfo.Arguments = @"script_edit.vbs /tempfile:" + Path.GetFullPath(@".\temp\" + tempScript) + " /qvw:" + Path.GetFullPath(@".\build\" + projectName + ".qvw");
+                    scriptProc.StartInfo.WindowStyle = ProcessWindowStyle.Hidden; //prevent console window from popping up
+                    scriptProc.Start();
+                    scriptProc.WaitForExit(); // <-- Optional if you want program running until your script exit
+                    scriptProc.Close();
+
+                    File.Delete(@".\temp\" + tempScript);
+                    Console.Clear();
+                    Environment.Exit(0); 
+
                     break;
                 case 3:
                     options = PrintOptions("* Remove *", new string[] { "1. Project",
@@ -147,9 +225,9 @@ namespace qv_solutions_helper
                     switch (options)
                     {
                         case 1:
-                            string solutionPath = System.IO.Directory.GetCurrentDirectory().ToString();
-                            solutionPath = Path.GetFullPath(Path.Combine(solutionPath, @".\src\scripts"));
-                            string[] availableProjects = Directory.GetDirectories(solutionPath);
+                            //string solutionPath = System.IO.Directory.GetCurrentDirectory().ToString();
+                            //solutionPath = Path.GetFullPath(Path.Combine(solutionPath, @".\src\scripts"));
+                            //string[] availableProjects = Directory.GetDirectories(solutionPath);
 
                             Console.Clear();
                             Console.WriteLine("* Remove project *");
@@ -162,7 +240,7 @@ namespace qv_solutions_helper
 
                             Console.WriteLine();
                             Console.Write("Which project? ");
-                            string selectedProject = Console.ReadLine();
+                            selectedProject = Console.ReadLine();
                             selectedProject = availableProjects[Convert.ToInt32(selectedProject) - 1];
 
                             Console.Write("Are you shure? This will remove all qvw, data and script files! (y/n) ");
@@ -248,8 +326,22 @@ namespace qv_solutions_helper
                     string stepqvw = Console.ReadLine();
                     string selectedStepqvw = availableStepsqvw[Convert.ToInt32(stepqvw) - 1];
                     selectedStepqvw = selectedStepqvw.Replace("\\scripts\\", "\\qvw\\") + ".qvw";
-                    System.Diagnostics.Process.Start(@"c:\Program Files\QlikView\Qv.exe", selectedStepqvw);
-                    MainMenu("", true);
+
+                    var qvPath = GetSetting("qvPath");
+
+                    if(qvPath == null)
+                    {
+                        Console.Clear();
+                        Console.WriteLine("'qvPath' parameter was not found in config.yaml!");
+                        Environment.Exit(0);
+                    }
+                     else
+                    {
+                        System.Diagnostics.Process.Start("", selectedStepqvw);
+                        MainMenu("", true);
+                    }
+
+
                     break;
                 case 5:
 
@@ -294,6 +386,15 @@ namespace qv_solutions_helper
 
             File.WriteAllBytes(newPath + ".qvw", Resource1._3Level);
             File.WriteAllText(path + "\\" + stepName + "\\" + "01Main.qvs", binaryLoad  + "//Hello QlikView!" + System.Environment.NewLine);
+
+            string createPrjFolders = GetSetting("generatePrjFolders");
+
+            if(createPrjFolders == "true")
+            {
+                Directory.CreateDirectory(newPath + "-prj");
+            }
+
+
         }
          
         static public int PrintOptions(string header, string[] options, bool clear)
@@ -328,7 +429,7 @@ namespace qv_solutions_helper
                     MainMenu("Unknown value", true);
                 }
 
-            } catch(Exception ex)
+            } catch(Exception)
             {
                 MainMenu("Unknown value", true);
             }
@@ -348,7 +449,9 @@ namespace qv_solutions_helper
                     Directory.Delete(folder, true);
                 } catch(Exception ex)
                 {
-
+                    Console.Clear();
+                    Console.WriteLine(ex.ToString());
+                    Environment.Exit(0);
                 }
             }
         }
@@ -379,6 +482,33 @@ namespace qv_solutions_helper
             string[] availableProjects = Directory.GetDirectories(solutionPath);
 
             return availableProjects;
+        }
+
+        static public string GetSetting(string searchKey)
+        {
+            using (TextReader reader = File.OpenText(@".\_config\solution.config.yaml"))
+            {
+                var stream = new YamlStream();
+                stream.Load(reader);
+
+                var document = stream.Documents.First();
+
+                var rootMapping = (YamlMappingNode)document.RootNode;
+                string value = null;
+
+                try
+                {
+                    value = rootMapping.Children[searchKey].ToString();
+                } catch (Exception ex)
+                {
+                    Console.Clear();
+                    Console.WriteLine(ex.ToString());
+                    Environment.Exit(0);
+                }
+
+                return value;
+
+            }
         }
     }
 }

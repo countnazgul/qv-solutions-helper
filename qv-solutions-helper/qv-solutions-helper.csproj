@@ -103,10 +103,19 @@
       <Install>false</Install>
     </BootstrapperPackage>
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="vbs\script_edit.vbs">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="temp\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>copy "$(ProjectDir)\bin\debug\qv-solutions-helper.exe" "F:\Projects\Personal\QV_Project_New\bin"
-copy "$(ProjectDir)\bin\debug\YamlDotNet.dll" "F:\Projects\Personal\QV_Project_New\bin"</PostBuildEvent>
+copy "$(ProjectDir)\bin\debug\YamlDotNet.dll" "F:\Projects\Personal\QV_Project_New\bin"
+copy "$(ProjectDir)\bin\debug\vbs\*" "F:\Projects\Personal\QV_Project_New\bin\vbs\"</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
