@@ -466,6 +466,7 @@ namespace qv_solutions_helper
                 Directory.Delete(step, true);
                 Directory.Delete(step.Replace("\\scripts\\", "\\data\\"), true);
                 File.Delete(step.Replace("\\scripts\\", "\\qvw\\") + ".qvw");
+                Directory.Delete(step.Replace("\\scripts\\", "\\qvw\\") + "-prj");
 
                 MainMenu("Step deleted", false);
             }
