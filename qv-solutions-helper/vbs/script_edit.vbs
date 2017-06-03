@@ -13,6 +13,14 @@ docprop.Script = qvscript
 f.SetProperties docprop
 
 f.Save
+
+saveEmpty = colArgs.Item("saveempty")
+
+if saveEmpty = "true" then 
+  f.RemoveAllData
+  f.SaveAs Replace(filePath, ".qvw", "_NoData.qvw")
+end if
+
 f.CloseDoc
 
 'QV.Quit

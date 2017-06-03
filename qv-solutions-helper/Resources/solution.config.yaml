@@ -1,0 +1,42 @@
+---
+# Please read the Readme file!
+# Please read the Readme file!
+# Please read the Readme file!
+# Global solution settings
+qvPath: c:\Program Files\QlikView\Qv.exe
+publishPaths: asd
+generatePrjFolders: true
+generateBuildLog: true
+embeddScriptOnBuild: true
+deleteTempScript: false
+# replace all occurences accross all project files
+# if one of the following symbols are in the replacement script then it should be quoted: [] {} : > |
+#   for example:
+#   target: "|source"
+# escape the back slash: 
+#   for example:
+#   target: c:\\mypath\\mySource
+replacements:
+    # global variables 
+    __PathData: all
+    __PathDataParent: asd
+    __PathDataTemp: asd
+    $(test): "|c:\\test\\blaaaa.qvd|"
+    # paths
+    \\..\c:\educati: "asddddd"
+# job: Developer
+# skill: Elite
+# employed: True
+# foods:
+#     - Apple
+#     - Orange
+#     - Strawberry
+#     - Mango
+# languages:
+#     perl: Elite
+#     python: Elite
+#     pascal: Lame
+# education: |
+#     4 GCSEs
+#     3 A-Levels
+#     BSc in the Internet of Things

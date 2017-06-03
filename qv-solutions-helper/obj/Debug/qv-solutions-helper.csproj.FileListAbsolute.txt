@@ -10,3 +10,4 @@ C:\Users\Home\documents\visual studio 2015\Projects\qv-solutions-helper\qv-solut
 C:\Users\Home\documents\visual studio 2015\Projects\qv-solutions-helper\qv-solutions-helper\bin\Debug\YamlDotNet.pdb
 C:\Users\Home\documents\visual studio 2015\Projects\qv-solutions-helper\qv-solutions-helper\bin\Debug\YamlDotNet.xml
 C:\Users\Home\documents\visual studio 2015\Projects\qv-solutions-helper\qv-solutions-helper\bin\Debug\vbs\script_edit.vbs
+C:\Users\Home\documents\visual studio 2015\Projects\qv-solutions-helper\qv-solutions-helper\obj\Debug\qv_solutions_helper.Properties.Resources.resources

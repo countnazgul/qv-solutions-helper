@@ -28,6 +28,45 @@ namespace qv_solutions_helper
 
         static public void MainMenu(string additionalMessage, bool clear)
         {
+            try
+            {
+                var settingCheck = GetSetting("qvPath");
+            }
+            catch
+            {
+                Console.Clear();
+                Console.WriteLine("Something wrong with the setting file");
+                Console.Write("Restore to default config? (y/n)");
+                string restore = Console.ReadLine();
+
+                if(restore == "y")
+                {
+                    File.WriteAllBytes("./_config/solution.config.yaml", Properties.Resources.solution_config);
+                    Console.Clear(); 
+                    Console.WriteLine("Config file restored. Please start the app again.");
+                    Environment.Exit(0);
+
+                } else
+                {
+                    Console.Clear();
+                    Console.WriteLine("Bye");
+                    Environment.Exit(0);
+                }
+                
+            }
+
+            //var t = GetSettingNodes("replacements");
+
+            //string script = "testasdasd$(test)testasdasdasd$(test)";
+
+            //foreach (var entry in t.Children)
+            //{
+            //    string search = entry.Key.ToString();
+            //    string replace = entry.Value.ToString();
+
+            //    script = script.Replace(search, @replace);
+            //}
+
 
             //WebRequest request = WebRequest.Create("https://api.twitter.com/1/users/profile_image?screen_name=twitterapi&size=bigger");
             //WebResponse response = request.GetResponse();
@@ -58,7 +97,7 @@ namespace qv_solutions_helper
                                                                                  "2. Build ...",
                                                                                  "3. Remove ..",
                                                                                  "4. Open step qvw",
-                                                                                 "5. Test"}, clear);
+                                                                                 "5. Publish"}, clear);
 
 
             switch (options)
@@ -151,7 +190,7 @@ namespace qv_solutions_helper
                 case 2:
 
                     Console.Clear();
-                    Console.WriteLine("* Remove project *");
+                    Console.WriteLine("* Build project *");
                     Console.WriteLine();
 
                     for (var i = 0; i < availableProjects.Length; i++)
@@ -195,25 +234,30 @@ namespace qv_solutions_helper
                     File.Copy( projectFolders[projectFolders.Length - 1].Replace(@"\scripts\", @"\qvw\") + ".qvw", @".\build\" + projectName + ".qvw", true);
 
 
-                    string tempScript = Guid.NewGuid().ToString();
+                    string tempScript = projectName + ".qvs"; //Guid.NewGuid().ToString();
 
+                    projectScript = Replacements(projectScript);
                     File.WriteAllText(@".\temp\" + tempScript, projectScript);
 
-                    //System.Diagnostics.Process.Start("cscript",  @".\bin\vbs\script_edit.vbs /tempfile:" + Path.GetFullPath(@".\temp\" + tempScript) + " /qvw:" + Path.GetFullPath(@".\build\" + projectName + ".qvw"));
+                    //Console.WriteLine(@"script_edit.vbs /tempfile:" + Path.GetFullPath(@".\temp\" + tempScript) + " /qvw:" + Path.GetFullPath(@".\build\" + projectName + ".qvw") + " /saveempty:" + "true");
+                    //Console.ReadLine();
 
                     Console.WriteLine("Building ...");
-                    Console.WriteLine("(building time depends on the last step qvw open and save time)");
-
+                    Console.WriteLine("(building time depends on the last step qvw open and save time)");                    
                     Process scriptProc = new Process();
                     scriptProc.StartInfo.FileName = @"cscript";
                     scriptProc.StartInfo.WorkingDirectory = @".\bin\vbs\"; //<---very important 
-                    scriptProc.StartInfo.Arguments = @"script_edit.vbs /tempfile:" + Path.GetFullPath(@".\temp\" + tempScript) + " /qvw:" + Path.GetFullPath(@".\build\" + projectName + ".qvw");
+                    scriptProc.StartInfo.Arguments = @"script_edit.vbs /tempfile:" + Path.GetFullPath(@".\temp\" + tempScript) + " /qvw:" + Path.GetFullPath(@".\build\" + projectName + ".qvw") + " /saveempty:" + "true" ;
                     scriptProc.StartInfo.WindowStyle = ProcessWindowStyle.Hidden; //prevent console window from popping up
                     scriptProc.Start();
                     scriptProc.WaitForExit(); // <-- Optional if you want program running until your script exit
                     scriptProc.Close();
 
-                    File.Delete(@".\temp\" + tempScript);
+                    if( GetSetting("deleteTempScript") == "true")
+                    {
+                        File.Delete(@".\temp\" + tempScript);
+                    }
+                    
                     Console.Clear();
                     Environment.Exit(0); 
 
@@ -499,7 +543,14 @@ namespace qv_solutions_helper
 
                 try
                 {
-                    value = rootMapping.Children[searchKey].ToString();
+                    if (rootMapping.Children[searchKey].GetType() == typeof(YamlDotNet.RepresentationModel.YamlScalarNode))
+                    {
+                        value = rootMapping.Children[searchKey].ToString();
+                    } else
+                    {
+                        //value = rootMapping.Children[searchKey];
+                    }
+                    
                 } catch (Exception ex)
                 {
                     Console.Clear();
@@ -510,6 +561,53 @@ namespace qv_solutions_helper
                 return value;
 
             }
+        }
+
+        static public YamlMappingNode GetSettingNodes(string searchKey)
+        {
+            //using (TextReader reader = File.OpenText(@".\_config\solution.config.yaml"))
+
+            using (TextReader reader = File.OpenText(@"F:\Projects\Personal\QV_Project_New\_config\solution.config.yaml")) 
+            {
+                var stream = new YamlStream();
+                stream.Load(reader);
+
+                var document = stream.Documents.First();
+
+                var rootMapping = (YamlMappingNode)document.RootNode;
+                YamlMappingNode value = new YamlMappingNode();
+
+                try
+                {
+                    var a = rootMapping.Children[searchKey].GetType().ToString();
+                    value = (YamlMappingNode)rootMapping.Children[searchKey];
+
+                }
+                catch (Exception ex)
+                {
+                    Console.Clear();
+                    Console.WriteLine(ex.ToString());
+                    Environment.Exit(0);
+                }
+
+                return value;
+
+            }
+        }
+
+        static string Replacements(string script)
+        {
+            var replacements = GetSettingNodes("replacements");
+   
+            foreach (var entry in replacements.Children)
+            {
+                string search = entry.Key.ToString();
+                string replace = entry.Value.ToString();
+
+                script = script.Replace(search, replace);
+            }
+
+            return script;
         }
     }
 }
